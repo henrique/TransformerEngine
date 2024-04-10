@@ -289,8 +289,8 @@ extern "C" void _ReadWriteBarrier();
 #  pragma intrinsic(_ReadWriteBarrier)
 #else
   _mm_mfence();
-  sleep(1);
 #endif
+  sleep(1);
 
   // init_p2p_transport();
   (*comm)->ibnvsize = (*comm)->nvsize;
