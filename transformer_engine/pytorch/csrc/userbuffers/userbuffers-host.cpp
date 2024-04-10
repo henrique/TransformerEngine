@@ -290,7 +290,9 @@ extern "C" void _ReadWriteBarrier();
 #else
   _mm_mfence();
 #endif
+  printf("MPI_Barrier\n");
   sleep(1);
+  MPI_Barrier((*comm)->comm_inter);
 
   // init_p2p_transport();
   (*comm)->ibnvsize = (*comm)->nvsize;
