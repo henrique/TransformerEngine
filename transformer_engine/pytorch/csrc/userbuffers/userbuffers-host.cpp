@@ -7,11 +7,15 @@
 #include "ipcsocket.cc"
 #include "ipcsocket.h"
 #include "userbuffers.h"
+#include "gdrapi.h"
 #include <assert.h>
 #include <chrono>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
+#if defined(__x86_64__)
 #include <immintrin.h>
+#include <x86intrin.h>
+#endif
 #include <iostream>
 #include <math.h>
 #include <mpi.h>
@@ -19,7 +23,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <x86intrin.h>
 #define MULTICAST_GB_TOTAL 512
 
 static int oob_bcast(void *comm_context, void *buf, int size, int root) {
@@ -279,8 +282,15 @@ int create_communicator_grouped2(communicator **comm, int pipegpus, int pipenode
                            (NVTE_MAX_SMS + 100) * sizeof(int)));
   for (int i = 0; i < 100 + NVTE_MAX_SMS; i++)
     (*comm)->hostflags[i] = 0;
+#if (defined(__arm__) && __ARM_ARCH >= 7) || defined(__aarch64__)
+  __asm__ __volatile__("dmb sy" : : : "memory");
+#elif defined(_MSC_VER) && _MSC_VER >= 1310
+extern "C" void _ReadWriteBarrier();
+#  pragma intrinsic(_ReadWriteBarrier)
+#else
   _mm_mfence();
   sleep(1);
+#endif
 
   // init_p2p_transport();
   (*comm)->ibnvsize = (*comm)->nvsize;
